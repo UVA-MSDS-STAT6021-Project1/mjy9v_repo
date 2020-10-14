@@ -18,9 +18,20 @@ attach(dia)
 slr_model_1 <- lm(price~carat)
 summary(slr_model_1)
 
+ggplot(data=dia, aes(x=slr_model_1$fitted.values, y=slr_model_1$residuals)) +
+  geom_point() +
+  labs(title='Residuals Against Fitted Values') +
+  ylab('Residuals') +
+  xlab('Fitted values')
+
+log_price <- log(price)
+slr_model_2 <- lm(log_price~carat)
+summary(slr_model_2) # significant!
+
 ########
 # Price in relation to carat and color
 crt_col_int <- lm(price~carat*color)
 summary(crt_col_int)
 # All colors except for Color E are significant, suggesting that carat and color
 # are jointly correlated with the price of the diamond.
+
