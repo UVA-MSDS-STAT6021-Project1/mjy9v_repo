@@ -28,6 +28,15 @@ log_price <- log(price)
 slr_model_2 <- lm(log_price~carat)
 summary(slr_model_2) # significant!
 
+ggplot(data=dia, aes(x=slr_model_2$fitted.values, y=slr_model_2$residuals)) +
+  geom_point() +
+  labs(title='Log Residuals Against Fitted Values') +
+  ylab('Log Res') +
+  xlab('Log FV')
+
+acf(slr_model_2$residuals, main="ACF of Res") # ACF of residuals
+
+
 ########
 # Price in relation to carat and color
 crt_col_int <- lm(price~carat*color)
