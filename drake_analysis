@@ -1,0 +1,24 @@
+#!/usr/bin/env Rscript
+
+# Drake Wagner
+# dbw2tn
+# dbw2tn@virginia.edu
+# setwd('~/git/stat-6021')                  # LINUX
+# setwd('C:\\Users\\dwagn\\git\\stat-6021') # WINDOWS
+
+library('ggplot2')
+
+dia <- read.csv('diamonds4.csv')
+
+ggplot(data=dia, aes(x=carat, y=price)) + 
+  geom_point() + 
+  geom_smooth(method='lm', formula= y~x, se=FALSE, col='red')
+
+attach(dia)
+slr_model_1 <- lm(price~carat)
+summary(slr_model_1)
+
+########
+# Price in relation to carat and color
+
+
