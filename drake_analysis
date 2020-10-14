@@ -20,5 +20,7 @@ summary(slr_model_1)
 
 ########
 # Price in relation to carat and color
-
-
+crt_col_int <- lm(price~carat*color)
+summary(crt_col_int)
+# All colors except for Color E are significant, suggesting that carat and color
+# are jointly correlated with the price of the diamond.
