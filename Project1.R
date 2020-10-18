@@ -1,133 +1,112 @@
-####################################################################################################################################
-# Stat 6021 Project 1
-####################################################################################################################################
-# Add library for boxcox plots
-library(MASS)
+data <- read.csv("diamonds4.csv")
+#bluenile.com
 
-data<- read.csv(file = 'diamonds4.csv', header=TRUE)
+View(data)
+#carat
+#clarity
+#color
+#cut
+#price
+
 attach(data)
-names(data)
+##exploring 'cut' data
+length(unique(cut) #4 unique values
+unique(cut) #unique values
+table(cut) #frequency by unique values
+is.numeric(cut)
 
-plot(carat, price, xlab="Weight (in Carats)", ylab="Price of the Diamond (in Dollars)", main="Plot of Diamond Price vs. Carat Weight")
+##subsetting
+a1<-subset(data,cut=="Good") 
+a2<-subset(data,cut=="Very Good") 
+a3<-subset(data,cut=="Ideal") 
+a4<-subset(data,cut=="Astor Ideal") 
 
-####################################################################################################################################
-# SLR price ~ carat 
-####################################################################################################################################
+##fit regression lines
+reg1<-lm(price~carat,data=a1)
+reg2<-lm(price~carat,data=a2)
+reg3<-lm(price~carat,data=a3)
+reg4<-lm(price~carat,data=a4)
 
-slrPriceCarat<-lm(price~carat)
-summary(slrPriceCarat)
+##scatterplot of data with different colors for cut
+jpeg("price by carat, by cut.jpg")
+plot(carat, price, main="Price by Carat, by Cut")
+points(a2$carat,a2$price, pch=2, col="blue") 
+points(a3$carat,a3$price, pch=6, col="green")
+points(a4$carat,a4$price, pch=12, col="red")
+legend("topleft", c("Good","Very Good","Ideal", "Astor Ideal"),pch=c(1,2,6,12), col=c("black","blue", "green", "red")) 
+dev.off()
 
-# Output:
-# Call:
-# lm(formula = price ~ carat)
+##scatterplot of data with different colors for cut (zoomed in)
+jpeg("graph.jpg")
+plot(carat, price, main="Price by Carat, by Cut (zoomed in)", ylim= c(1, 50000))
+points(a2$carat,a2$price, pch=2, col="blue") 
+points(a3$carat,a3$price, pch=6, col="green")
+points(a4$carat,a4$price, pch=12, col="red")
+legend("topleft", c("Good","Very Good","Ideal", "Astor Ideal"),pch=c(1,2,6,12), col=c("black","blue", "green", "red")) 
+dev.off()
 
-# Residuals:
-#  Min     1Q Median     3Q    Max 
-# -49375  -5048   1867   4965 236711 
+##plot with fitted regression lines
+jpeg("graph.jpg")
+plot(carat, price, main="Price by Carat, by Cut (zoomed in)", ylim= c(1, 50000))
+points(a2$carat,a2$price, pch=2, col="blue") 
+points(a3$carat,a3$price, pch=6, col="green")
+points(a4$carat,a4$price, pch=12, col="red")
+abline(reg1,lty=1)
+abline(reg2,lty=2, col="red") 
+abline(reg3,lty=3, col="blue")
+abline(reg4,lty=4, col="green")
+legend("topleft", c("Good","Very Good","Ideal", "Astor Ideal"), lty=c(1,2,3,4), pch=c(1,2,6,12), col=c("black","blue", "green", "red")) 
+dev.off()
 
-# Coefficients:
-#               Estimate Std. Error t value Pr(>|t|)    
-# (Intercept)  -13550.9      559.7  -24.21   <2e-16 ***
-#  carat        25333.9      494.4   51.24   <2e-16 ***
-  ---
-#  Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+##evaluating regession with interaction
+result<-lm(price~carat*cut) 
+summary(result)
 
-# Residual standard error: 13560 on 1212 degrees of freedom
-# Multiple R-squared:  0.6842,	Adjusted R-squared:  0.6839 
-# F-statistic:  2625 on 1 and 1212 DF,  p-value: < 2.2e-16
-  
-plot(slrPriceCarat$fitted.values,slrPriceCarat$residuals, main="Plot of Residuals against Fitted Values")
-abline(h=0,col="red")
+##evaluating regession with no interaction
+reduced<-lm(price~carat+cut) #???Why does this work when cut isn't numeric? Are indicator varibles assigned behind the scenes?
+anova(reduced,result)
 
-acf(slrPriceCarat$residuals, main="ACF of Residuals")
+##ACF plot of residuals
+acf(reduced$residuals)
 
-qqnorm(slrPriceCarat$residuals)
-qqline(slrPriceCarat$residuals, col="red")
+##QQ plot of residuals
+qqnorm(reduced$residuals)
+qqline(reduced$residuals, col="purple")
 
-boxcox(slrPriceCarat, lambda = seq(0, .5, 0.2))
+##additional assumption to check with categorical predictor. Is the variance of the response variable constant between all classes of the categorical predictor?
+boxplot(price~cut, main="Boxplot of price by cut")
+boxplot(price~cut, main="Boxplot of price by cut", ylim= c(1, 10000))
 
-####################################################################################################################################
-# SLR log(price) ~ carat 
-####################################################################################################################################
+##perform levene's test. Null states the variances are equal for all classes. 
+library(lawstat)
+levene.test(price,cut)
 
-price_log<-log(price)
-slrPriceCarat.log_price<-lm(price_log~carat)
-summary(slrPriceCarat.log_price)
+summary(reduced)
 
-# Output
-# Call:
-# lm(formula = price_log ~ carat)
+##perform Tukey's multiple comparisons
+library(multcomp)
+pairwise<-glht(reduced, linfct = mcp(cut= "Tukey"))
+summary(pairwise)
 
-# Residuals:
-#   Min      1Q  Median      3Q     Max 
-# -4.0128 -0.4350  0.0067  0.4139  1.8178 
+reduced$coef
 
-# Coefficients:
-#   Estimate Std. Error t value Pr(>|t|)    
-# (Intercept)  6.43235    0.02490  258.37   <2e-16 ***
-#   carat        1.45739    0.02199   66.27   <2e-16 ***
+##obtain the variance-covariance matrix of the coefficients
+vcov(reduced)
 
-#  Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+##save violations of assumptions to a jpg file
+jpeg("graph.jpg")
+par(mfrow=c(1,3))
+acf(result$residuals)
+qqnorm(result$residuals)
+qqline(result$residuals, col="purple")
+boxplot(price~cut, main="Boxplot of price by cut")
+dev.off()
 
-# Residual standard error: 0.6032 on 1212 degrees of freedom
-# Multiple R-squared:  0.7837,	Adjusted R-squared:  0.7835 
-# F-statistic:  4392 on 1 and 1212 DF,  p-value: < 2.2e-16
-
-# Observations:
-# R-squared value improved
-
-plot(slrPriceCarat.log_price$fitted.values,slrPriceCarat.log_price$residuals, main="Plot of Residuals against Fitted Values")
-abline(h=0,col="red")
-
-acf(slrPriceCarat.log_price$residuals, main="ACF of Residuals")
-
-qqnorm(slrPriceCarat.log_price$residuals)
-qqline(slrPriceCarat.log_price$residuals, col="red")
-
-
-boxcox(slrPriceCarat.log_price, lambda = seq(-2, 10, .2))
-
-####################################################################################################################################
-# SLR log(price) ~ log(carat) 
-####################################################################################################################################
-
-carat_log<-log(carat)
-slrPriceCarat.log_price_carat<-lm(price_log~carat_log)
-summary(slrPriceCarat.log_price_carat)
-
-# Output:
-# Call:
-# lm(formula = price_log ~ carat_log)
-
-# Residuals:
-#  Min       1Q   Median       3Q      Max 
-# -0.96394 -0.17231 -0.00252  0.14742  1.14095 
-
-# Coefficients:
-#               Estimate Std. Error t value   Pr(>|t|)    
-# (Intercept)   8.521208   0.009734   875.4   <2e-16 ***
-#   carat_log   1.944020   0.012166   159.8   <2e-16 ***
-
-#  Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-# Residual standard error: 0.2761 on 1212 degrees of freedom
-# Multiple R-squared:  0.9547,	Adjusted R-squared:  0.9546 
-# F-statistic: 2.553e+04 on 1 and 1212 DF,  p-value: < 2.2e-16
-
-# Observations:
-# R-squared value improved quite a bit
-
-plot(carat_log, price_log, xlab="Log(Weight (in Carats))", ylab="Log(Price of the Diamond (in Dollars))", main="Plot of Log(Diamond Price) vs. Log(Carat Weight)")
-
-plot(slrPriceCarat.log_price_carat$fitted.values,slrPriceCarat.log_price_carat$residuals, main="Plot of Residuals against Fitted Values")
-abline(h=0,col="red")
-
-acf(slrPriceCarat.log_price_carat$residuals, main="ACF of Residuals")
-
-qqnorm(slrPriceCarat.log_price_carat$residuals)
-qqline(slrPriceCarat.log_price_carat$residuals, col="red")
-
-boxcox(slrPriceCarat.log_price_carat, lambda = seq(-0.5, 1.5, .2))
-
-
-
+##save violations of assumptions (reduced model) to a jpg file
+jpeg("graph.jpg")
+par(mfrow=c(1,3))
+acf(reduced$residuals)
+qqnorm(reduced$residuals)
+qqline(reduced$residuals, col="purple")
+boxplot(price~cut, main="Boxplot of price by cut")
+dev.off()
